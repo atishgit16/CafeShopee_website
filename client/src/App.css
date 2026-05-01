@@ -1,3 +1,9 @@
+
+* {
+  cursor: url("/cursor.cur") 16 16, auto !important;
+}
+
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
@@ -182,3 +188,56 @@
     border-right-color: var(--border);
   }
 }
+
+
+
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600;700&display=swap');
+
+* {
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.rotate-y-10 {
+  transform: rotateY(10deg);
+}
+
+.rotate-y-0 {
+  transform: rotateY(0deg);
+}
+
+@keyframes float-bean {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(180deg); }
+}
+
+.animate-float-bean {
+  animation: float-bean 3s ease-in-out infinite;
+}
+
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-20px) scale(1.5); }
+}
+
+.animate-float-particle {
+  animation: float-particle 4s ease-in-out infinite;
+}
+
+.animate-float-particle-delay {
+  animation: float-particle 4s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+

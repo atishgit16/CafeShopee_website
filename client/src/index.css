@@ -1,2 +1,5 @@
 @import "tailwindcss";
 
+* {
+  cursor: url("/cursor.cur") 16 16, auto !important;
+}
