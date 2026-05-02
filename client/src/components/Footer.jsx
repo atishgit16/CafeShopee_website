@@ -1,55 +1,87 @@
-import React from "react";
+// src/components/Footer.jsx
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Send 
+} from 'lucide-react';
 
 const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-black text-gray-400 pt-12 pb-6 px-6 border-t border-gray-800">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+<footer className="bg-black text-gray-300 border-t border-gray-800 pt-16 pb-8 relative z-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Brand */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+              BrewHeaven
+            </h2>
+            <p className="text-sm leading-relaxed">
+              Experience handcrafted coffee, cozy vibes, and a premium café culture.
+            </p>
+          </div>
 
-        {/* Brand */}
-        <div>
-          <h2 className="text-2xl font-bold text-white">BrewHeaven ☕</h2>
-          <p className="mt-3 text-sm">
-            Experience handcrafted coffee, cozy vibes, and a premium café culture.
-          </p>
-        </div>
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-white font-bold text-lg mb-4">Quick Links</h3>
+            <ul className="space-y-2">
+              <li><Link to="/" className="text-gray-400 hover:text-amber-400 transition-colors">Home</Link></li>
+              <li><Link to="/menu" className="text-gray-400 hover:text-amber-400 transition-colors">Menu</Link></li>
+              <li><Link to="/about" className="text-gray-400 hover:text-amber-400 transition-colors">About</Link></li>
+              <li><Link to="/contact" className="text-gray-400 hover:text-amber-400 transition-colors">Contact</Link></li>
+            </ul>
+          </div>
 
-        {/* Quick Links */}
-        <div>
-          <h3 className="text-white font-semibold mb-3">Quick Links</h3>
-          <ul className="space-y-2 text-sm">
-            <li><a href="/" className="hover:text-white transition">Home</a></li>
-            <li><a href="/menu" className="hover:text-white transition">Menu</a></li>
-            <li><a href="/about" className="hover:text-white transition">About Us</a></li>
-            <li><a href="/contact" className="hover:text-white transition">Contact</a></li>
-          </ul>
-        </div>
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-white font-bold text-lg mb-4">Contact</h3>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-amber-400" />
+                <span>Mumbai, India</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-amber-400" />
+                <span>+91 98765 43210</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-amber-400" />
+                <span>hello@brewheaven.com</span>
+              </li>
+            </ul>
+          </div>
 
-        {/* Contact */}
-        <div>
-          <h3 className="text-white font-semibold mb-3">Contact</h3>
-          <p className="text-sm">Mumbai, India</p>
-          <p className="text-sm">+91 98765 43210</p>
-          <p className="text-sm">hello@brewheaven.com</p>
-        </div>
-
-        {/* Social */}
-        <div>
-          <h3 className="text-white font-semibold mb-3">Follow Us</h3>
-          <div className="flex space-x-4 text-lg">
-            <a href="#" className="hover:text-white transition">🌐</a>
-            <a href="#" className="hover:text-white transition">📸</a>
-            <a href="#" className="hover:text-white transition">🐦</a>
+          {/* Newsletter */}
+          <div>
+            <h3 className="text-white font-bold text-lg mb-4">Newsletter</h3>
+            <p className="text-sm text-gray-400 mb-3">Subscribe for updates</p>
+            <form className="flex gap-2">
+              <input
+                type="email"
+                placeholder="Your email"
+                className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white text-sm"
+                required
+              />
+              <button 
+                type="submit"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded-xl transition-colors"
+              >
+                <Send className="w-4 h-4 text-white" />
+              </button>
+            </form>
           </div>
         </div>
 
-      </div>
-
-      {/* Bottom */}
-      <div className="mt-10 text-center text-sm border-t border-gray-800 pt-4">
-        <p>© {new Date().getFullYear()} BrewHeaven Cafe. All rights reserved.</p>
-        <p className="mt-1 text-xs text-gray-500">
-          Crafted with ☕ and passion in Mumbai.
-        </p>
+        {/* Bottom */}
+        <div className="border-t border-gray-800 mt-12 pt-6 text-center">
+          <p className="text-sm text-gray-400">
+            © {currentYear} <span className="text-amber-400">BrewHeaven</span> Cafe. All rights reserved.
+          </p>
+        </div>
       </div>
     </footer>
   );

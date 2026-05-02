@@ -1,47 +1,132 @@
-// components/Header.jsx (Enhanced version with additional features)
+// components/Header.jsx - Updated version
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { ShoppingCart, LogOut, Menu, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-const Header = ({ scrolled, scrollToSection, heroRef, aboutRef, menuRef, contactRef }) => {
+const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef, contactRef }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, logout, isAuthenticated, isAdmin } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const navItems = ['Home', 'About', 'Menu', 'Contact'];
-  const refs = { Home: heroRef, About: aboutRef, Menu: menuRef, Contact: contactRef };
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    toast.success('Logged out successfully');
+  };
+
+  // Navigation items based on authentication status
+  const navItems = [
+    { name: 'Home', path: '/', ref: heroRef },
+    { name: 'About', path: '/about', ref: aboutRef },
+    { name: 'Menu', path: '/menu', ref: menuRef },
+    { name: 'Contact', path: '/contact', ref: contactRef },
+    ...(isAuthenticated ? [{ name: 'Cart', path: '/cart' }] : []),
+    ...(isAdmin ? [{ name: 'Admin', path: '/admin' }] : []),
+  ];
+
+  const handleNavigation = (item) => {
+    if (item.ref && scrollToSection && location.pathname === '/') {
+      // If on homepage, scroll to section
+      scrollToSection(item.ref);
+    } else if (item.ref && scrollToSection) {
+      // Navigate to homepage and then scroll
+      navigate('/');
+      setTimeout(() => {
+        scrollToSection(item.ref);
+      }, 100);
+    } else {
+      navigate(item.path);
+    }
+    setMobileMenuOpen(false);
+  };
+
+  const handleLogoClick = () => {
+    if (location.pathname === '/' && scrollToSection) {
+      scrollToSection(heroRef);
+    } else {
+      navigate('/');
+    }
+  };
 
   return (
     <>
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-        scrolled ? 'bg-black/50 backdrop-blur-lg py-3 shadow-2xl' : 'bg-transparent py-6'
-      }`}>
+     <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+  scrolled
+    ? 'bg-black/70 backdrop-blur-xl py-1 shadow-xl border-b border-white/10'
+    : 'bg-black/30 backdrop-blur-sm py-1'
+}`}>
         <div className="container mx-auto px-6 flex justify-between items-center">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 cursor-pointer"
+            onClick={handleLogoClick}
           >
-     <img  onClick={() => scrollToSection(heroRef)}
-  src="/logo1.png" 
-  alt="BrewHeaven Logo" 
-  className="h-20 w-auto object-contain hover:scale-110 transition duration-300"
-/>
+            <img 
+              src="/logo1.png" 
+              alt="BrewHeaven Logo" 
+              className="h-20 w-auto object-contain hover:scale-110 transition duration-300"
+            />
           </motion.div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-8 text-lg font-medium">
             {navItems.map((item) => (
               <motion.button
-                key={item}
+                key={item.name}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => scrollToSection(refs[item])}
-                className="hover:text-amber-400 transition-colors duration-300 relative group"
+                onClick={() => handleNavigation(item)}
+                className="text-white hover:text-amber-400 transition-colors duration-300 relative group"
               >
-                {item}
+                {item.name}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-400 transition-all duration-300 group-hover:w-full"></span>
               </motion.button>
             ))}
+          </div>
+
+          {/* Desktop Right Section */}
+          <div className="hidden md:flex items-center space-x-6">
+            {isAuthenticated ? (
+              <>
+                <Link to="/cart" className="relative text-white hover:text-amber-400 transition-colors">
+                  <ShoppingCart className="w-6 h-6" />
+                  <span className="absolute -top-2 -right-2 bg-amber-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    0
+                  </span>
+                </Link>
+                <div className="flex items-center space-x-3">
+                  <span className="text-white font-medium">{user?.name}</span>
+                  <button
+                    onClick={handleLogout}
+                    className="text-white hover:text-red-400 transition-colors"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link
+                  to="/login"
+                  className="text-white hover:text-amber-400 transition-colors text-lg font-medium"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2 rounded-full font-semibold transition-all shadow-lg"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -50,20 +135,13 @@ const Header = ({ scrolled, scrollToSection, heroRef, aboutRef, menuRef, contact
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-white hover:text-amber-400 transition"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
-
-          {/* Order Button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-amber-600 hover:bg-amber-700 px-5 py-2 rounded-full font-semibold transition-all shadow-lg hidden sm:block"
-          >
-            Order Now
-          </motion.button>
         </div>
       </nav>
 
@@ -76,24 +154,49 @@ const Header = ({ scrolled, scrollToSection, heroRef, aboutRef, menuRef, contact
           pointerEvents: mobileMenuOpen ? 'auto' : 'none'
         }}
         transition={{ duration: 0.3 }}
-        className={`fixed top-16 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg p-4 md:hidden`}
+        className={`fixed top-20 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg p-4 md:hidden`}
       >
         <div className="flex flex-col space-y-4">
           {navItems.map((item) => (
             <button
-              key={item}
-              onClick={() => {
-                scrollToSection(refs[item]);
-                setMobileMenuOpen(false);
-              }}
-              className="text-lg font-medium hover:text-amber-400 transition-colors py-2 border-b border-white/10"
+              key={item.name}
+              onClick={() => handleNavigation(item)}
+              className="text-lg font-medium hover:text-amber-400 transition-colors py-2 border-b border-white/10 text-left"
             >
-              {item}
+              {item.name}
             </button>
           ))}
-          <button className="bg-amber-600 hover:bg-amber-700 px-5 py-3 rounded-full font-semibold transition-all">
-            Order Now
-          </button>
+          {isAuthenticated ? (
+            <>
+              <button 
+                onClick={handleLogout}
+                className="text-lg font-medium hover:text-red-400 transition-colors py-2 border-b border-white/10 text-left"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  navigate('/login');
+                  setMobileMenuOpen(false);
+                }}
+                className="text-lg font-medium hover:text-amber-400 transition-colors py-2 border-b border-white/10 text-left"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => {
+                  navigate('/register');
+                  setMobileMenuOpen(false);
+                }}
+                className="bg-amber-600 hover:bg-amber-700 px-5 py-3 rounded-full font-semibold transition-all text-center"
+              >
+                Sign Up
+              </button>
+            </>
+          )}
         </div>
       </motion.div>
     </>
