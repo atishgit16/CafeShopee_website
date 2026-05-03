@@ -145,7 +145,7 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
         </div>
       </nav>
 
-      {/* Mobile Menu - Responsive 3 lines max */}
+      {/* Mobile Menu - Show ALL navigation items */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ 
@@ -157,7 +157,8 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
         className={`fixed top-16 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg p-4 md:hidden max-h-[80vh] overflow-y-auto`}
       >
         <div className="flex flex-col space-y-2">
-          {navItems.slice(0, 3).map((item) => (
+          {/* Show ALL navigation items without slicing */}
+          {navItems.map((item) => (
             <button
               key={item.name}
               onClick={() => handleNavigation(item)}
@@ -166,21 +167,6 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
               {item.name}
             </button>
           ))}
-          
-          {/* Show remaining items in hamburger menu */}
-          {navItems.length > 3 && (
-            <div className="mt-2 border-t border-white/10 pt-2">
-              {navItems.slice(3).map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => handleNavigation(item)}
-                  className="text-lg font-medium hover:text-amber-400 transition-colors py-2 border-b border-white/10 text-left w-full"
-                >
-                  {item.name}
-                </button>
-              ))}
-            </div>
-          )}
           
           {isAuthenticated ? (
             <>
