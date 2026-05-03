@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Eye, Package, Clock, CheckCircle, XCircle, Truck } from 'lucide-react';
+import { ArrowLeft, Eye, Package, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -51,7 +51,6 @@ const AdminOrders = () => {
     switch(status) {
       case 'pending': return 'bg-yellow-500/20 text-yellow-500';
       case 'processing': return 'bg-blue-500/20 text-blue-500';
-      case 'shipped': return 'bg-purple-500/20 text-purple-500';
       case 'delivered': return 'bg-green-500/20 text-green-500';
       case 'cancelled': return 'bg-red-500/20 text-red-500';
       default: return 'bg-gray-500/20 text-gray-500';
@@ -62,7 +61,6 @@ const AdminOrders = () => {
     switch(status) {
       case 'pending': return <Clock className="w-4 h-4" />;
       case 'processing': return <Package className="w-4 h-4" />;
-      case 'shipped': return <Truck className="w-4 h-4" />;
       case 'delivered': return <CheckCircle className="w-4 h-4" />;
       case 'cancelled': return <XCircle className="w-4 h-4" />;
       default: return <Clock className="w-4 h-4" />;
@@ -70,7 +68,7 @@ const AdminOrders = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -79,10 +77,13 @@ const AdminOrders = () => {
     });
   };
 
+  // ✅ INDIAN RUPEE FORMAT
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
@@ -247,11 +248,11 @@ const AdminOrders = () => {
                   </div>
                 </div>
 
-                {/* Order Status */}
+                {/* Order Status — ONLY 4 STATUSES, NO SHIPPED */}
                 <div className="bg-gray-800/50 rounded-xl p-4">
                   <h3 className="font-semibold mb-2">Update Order Status</h3>
                   <div className="grid grid-cols-2 gap-2">
-                    {['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
+                    {['pending', 'processing', 'delivered', 'cancelled'].map((status) => (
                       <button
                         key={status}
                         onClick={() => updateOrderStatus(selectedOrder._id, status)}
