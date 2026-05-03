@@ -7,21 +7,23 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
     outDir: 'dist',
-    sourcemap: false, // Disable source maps for production
+    sourcemap: false,
+    // ✅ Fix: manualChunks should be a function, not an object
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          stripe: ['@stripe/stripe-js', '@stripe/react-stripe-js'],
-        },
-      },
-    },
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) return 'vendor-react'
+            if (id.includes('stripe')) return 'vendor-stripe'
+            if (id.includes('three')) return 'vendor-three'
+            return 'vendor'
+          }
+        }
+      }
+    }
   },
   server: {
     port: 5173,
     open: true,
   },
-  define: {
-    'process.env': {},
-  },
-})
+});
