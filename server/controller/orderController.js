@@ -21,6 +21,14 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // Create order
 exports.createOrder = async (req, res) => {
   try {
+    console.log('📝 Order request received');
+    console.log('  - Body:', req.body);
+    console.log('  - User ID:', req.user.id);
+    console.log('  - Order Type:', req.body.orderType);
+    console.log('  - Location ID:', req.body.locationId);
+    console.log('  - Table Number:', req.body.tableNumber);
+    console.log('  - Delivery Coordinates:', req.body.deliveryCoordinates);
+    
     const { 
       address, 
       paymentMethod, 
@@ -33,33 +41,58 @@ exports.createOrder = async (req, res) => {
 
     // Get user cart
     const cart = await Cart.findOne({ user: req.user.id }).populate('items.product');
+    console.log('🛒 Cart found:', cart ? 'Yes' : 'No');
+    console.log('📦 Cart items count:', cart?.items?.length || 0);
+    
     if (!cart || cart.items.length === 0) {
+      console.log('❌ Cart is empty');
       return res.status(400).json({ message: 'Cart is empty' });
     }
 
     // Validate order type
+    console.log('🔍 Validating order type:', orderType);
     if (!orderType || !['dine-in', 'delivery'].includes(orderType)) {
+      console.log('❌ Invalid order type:', orderType);
       return res.status(400).json({ message: 'Invalid order type' });
     }
 
+    let location = null;
+    let table = null;
+    let distance = 0;
+
     // Dine-in validation
     if (orderType === 'dine-in') {
+      console.log('📍 Processing dine-in order');
+      console.log('  - Table:', tableNumber);
+      console.log('  - Location:', locationId);
+      
       if (!tableNumber || !locationId) {
+        console.log('❌ Missing table number or location');
         return res.status(400).json({ message: 'Table number and location are required for dine-in' });
       }
 
       // Check if table is available
-      const location = await Location.findById(locationId);
+      location = await Location.findById(locationId);
+      console.log('📍 Location found:', location ? 'Yes' : 'No');
+      
       if (!location) {
+        console.log('❌ Location not found:', locationId);
         return res.status(404).json({ message: 'Location not found' });
       }
 
-      const table = location.tables.find(t => t.tableNumber === parseInt(tableNumber));
+      table = location.tables.find(t => t.tableNumber === parseInt(tableNumber));
+      console.log('🪑 Table found:', table ? 'Yes' : 'No');
+      
       if (!table) {
+        console.log('❌ Table not found:', tableNumber);
         return res.status(404).json({ message: 'Table not found' });
       }
 
+      console.log('  - Table available:', table.isAvailable);
+      console.log('  - Table reserved:', table.isReserved);
+      
       if (!table.isAvailable || table.isReserved) {
+        console.log('❌ Table is not available');
         return res.status(400).json({ message: 'Table is not available' });
       }
 
@@ -68,34 +101,40 @@ exports.createOrder = async (req, res) => {
       table.reservedBy = req.user.id;
       table.reservedAt = new Date();
       await location.save();
+      console.log('✅ Table reserved successfully');
     }
 
-    // Delivery validation
+    // Delivery validation (removed distance check - only detect location and save)
     if (orderType === 'delivery') {
-      if (!address || !deliveryCoordinates) {
-        return res.status(400).json({ message: 'Delivery address and coordinates are required' });
+      console.log('🚚 Processing delivery order');
+      console.log('  - Coordinates:', deliveryCoordinates);
+      
+      if (!deliveryCoordinates) {
+        console.log('❌ Missing delivery coordinates');
+        return res.status(400).json({ message: 'Delivery coordinates are required' });
       }
 
       // Get the cafe location (default location)
       const cafeLocation = await Location.findOne({ isActive: true });
+      console.log('📍 Cafe location found:', cafeLocation ? 'Yes' : 'No');
+      
       if (!cafeLocation) {
+        console.log('❌ Cafe location not found');
         return res.status(400).json({ message: 'Cafe location not found' });
       }
 
-      // Calculate distance
-      const distance = calculateDistance(
+      // Calculate distance (for logging only, no validation)
+      distance = calculateDistance(
         cafeLocation.coordinates.lat,
         cafeLocation.coordinates.lng,
         deliveryCoordinates.lat,
         deliveryCoordinates.lng
       );
-
-      // Check if within delivery radius
-      if (distance > (cafeLocation.deliveryRadius || 10)) {
-        return res.status(400).json({ 
-          message: `Delivery not available for this location (${distance.toFixed(1)}km away). Maximum delivery radius is ${cafeLocation.deliveryRadius || 10}km.` 
-        });
-      }
+      console.log('📏 Distance from cafe:', distance.toFixed(2), 'km');
+      console.log('  - Cafe coordinates:', cafeLocation.coordinates);
+      console.log('  - Delivery coordinates:', deliveryCoordinates);
+      
+      // ✅ DISTANCE VALIDATION REMOVED - allowing all deliveries
     }
 
     // Calculate totals with coupon
@@ -104,6 +143,7 @@ exports.createOrder = async (req, res) => {
     let appliedCoupon = null;
 
     if (coupon) {
+      console.log('🎫 Applying coupon:', coupon.code);
       const validCoupon = await Coupon.findOne({ 
         code: coupon.code.toUpperCase(),
         isActive: true,
@@ -111,12 +151,16 @@ exports.createOrder = async (req, res) => {
         validUntil: { $gte: new Date() }
       });
 
+      console.log('  - Coupon valid:', validCoupon ? 'Yes' : 'No');
+      
       if (validCoupon) {
         if (validCoupon.usageLimit > 0 && validCoupon.usedCount >= validCoupon.usageLimit) {
+          console.log('❌ Coupon usage limit exceeded');
           return res.status(400).json({ message: 'Coupon usage limit exceeded' });
         }
 
         if (totalAmount < validCoupon.minOrderAmount) {
+          console.log('❌ Minimum order amount not met');
           return res.status(400).json({ 
             message: `Minimum order amount of ₹${validCoupon.minOrderAmount} required for this coupon` 
           });
@@ -137,10 +181,12 @@ exports.createOrder = async (req, res) => {
         validCoupon.usedCount += 1;
         await validCoupon.save();
         appliedCoupon = validCoupon._id;
+        console.log('✅ Coupon applied, discount:', discountAmount);
       }
     }
 
     const finalTotal = Math.round((totalAmount - discountAmount) * 100) / 100;
+    console.log('💰 Final total:', finalTotal);
 
     // Create order items
     const orderItems = cart.items.map(item => ({
@@ -168,12 +214,6 @@ exports.createOrder = async (req, res) => {
 
     if (orderType === 'delivery') {
       orderData.deliveryAddress = {
-        street: address.street,
-        city: address.city,
-        state: address.state,
-        zipCode: address.zipCode,
-        country: address.country,
-        phone: address.phone,
         coordinates: deliveryCoordinates
       };
       orderData.deliveryDistance = distance;
@@ -181,22 +221,28 @@ exports.createOrder = async (req, res) => {
 
     const order = new Order(orderData);
     await order.save();
+    console.log('✅ Order saved with ID:', order._id);
 
     // Clear cart
     cart.items = [];
     cart.totalPrice = 0;
     await cart.save();
+    console.log('✅ Cart cleared');
 
-    res.status(201).json({ 
-      message: 'Order created successfully', 
-      order,
-      discountAmount,
-      finalTotal,
-      redirectTo: '/order-success'
-    });
+  res.status(201).json({ 
+  message: 'Order created successfully', 
+  order,
+  discountAmount,
+  finalTotal,
+  redirectTo: `/order-success?orderId=${order._id}`
+});
+
   } catch (error) {
-    console.error('Create order error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Create order error:', error);
+    console.error('  - Error name:', error.name);
+    console.error('  - Error message:', error.message);
+    console.error('  - Error stack:', error.stack);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -273,6 +319,84 @@ exports.updateOrderStatus = async (req, res) => {
     res.json({ message: 'Order updated successfully', order });
   } catch (error) {
     console.error('Update order error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get order tracking (basic timeline)
+exports.getOrderTracking = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    const order = await Order.findById(orderId)
+      .populate('items.product')
+      .populate('location');
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
+    // Check if user is authorized
+    if (order.user._id.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+    
+    // Create tracking timeline
+    const trackingTimeline = [];
+    
+    trackingTimeline.push({
+      status: 'Order Received',
+      description: 'Your order has been received and is being processed.',
+      timestamp: order.createdAt,
+      completed: true
+    });
+    
+    if (order.orderStatus === 'confirmed' || order.orderStatus === 'processing' || 
+        order.orderStatus === 'preparing' || order.orderStatus === 'ready' || 
+        order.orderStatus === 'delivered') {
+      trackingTimeline.push({
+        status: 'Order Confirmed',
+        description: 'Your order has been confirmed by the cafe.',
+        timestamp: order.createdAt,
+        completed: true
+      });
+    }
+    
+    if (order.orderStatus === 'preparing' || order.orderStatus === 'ready' || 
+        order.orderStatus === 'delivered') {
+      trackingTimeline.push({
+        status: 'Preparing',
+        description: 'Your order is being prepared by our chefs.',
+        timestamp: order.createdAt,
+        completed: true
+      });
+    }
+    
+    if (order.orderStatus === 'ready' || order.orderStatus === 'delivered') {
+      trackingTimeline.push({
+        status: 'Ready',
+        description: 'Your order is ready!',
+        timestamp: order.createdAt,
+        completed: true
+      });
+    }
+    
+    if (order.orderStatus === 'delivered') {
+      trackingTimeline.push({
+        status: 'Delivered',
+        description: 'Your order has been delivered successfully!',
+        timestamp: order.createdAt,
+        completed: true
+      });
+    }
+    
+    res.json({
+      order,
+      trackingTimeline,
+      currentStatus: order.orderStatus
+    });
+  } catch (error) {
+    console.error('Get order tracking error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

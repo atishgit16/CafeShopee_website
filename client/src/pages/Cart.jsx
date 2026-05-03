@@ -1,14 +1,13 @@
 // src/pages/Cart.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
-import { Trash2, Minus, Plus, ShoppingBag, Ticket, X, Percent } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, Ticket, X } from 'lucide-react';
 
 const Cart = () => {
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { cart, loading, updateQuantity, removeItem, clearCart } = useCart();
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [discount, setDiscount] = useState(0);
   const [couponCode, setCouponCode] = useState('');
@@ -23,32 +22,18 @@ const Cart = () => {
       navigate('/login');
       return;
     }
-    fetchCart();
     // Check for applied coupon from localStorage
     const savedCoupon = localStorage.getItem('appliedCoupon');
     if (savedCoupon) {
       try {
         const coupon = JSON.parse(savedCoupon);
         setAppliedCoupon(coupon);
-        // Calculate discount
         calculateDiscount(coupon);
       } catch (error) {
         console.error('Error parsing coupon:', error);
       }
     }
   }, [isAuthenticated]);
-
-  const fetchCart = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/cart`);
-      setCart(response.data);
-    } catch (error) {
-      console.error('Fetch cart error:', error);
-      toast.error('Failed to load cart');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const calculateDiscount = (coupon) => {
     if (!cart) return;
@@ -109,53 +94,6 @@ const Cart = () => {
     toast.success('Coupon removed');
   };
 
-  const updateQuantity = async (itemId, newQuantity) => {
-    if (newQuantity < 1) return;
-    try {
-      await axios.put(`${API_URL}/cart/${itemId}`, { quantity: newQuantity });
-      // Refresh cart and recalculate discount
-      await fetchCart();
-      if (appliedCoupon) {
-        calculateDiscount(appliedCoupon);
-      }
-    } catch (error) {
-      console.error('Update cart error:', error);
-      toast.error('Failed to update cart');
-    }
-  };
-
-  const removeItem = async (itemId) => {
-    try {
-      await axios.delete(`${API_URL}/cart/${itemId}`);
-      await fetchCart();
-      if (appliedCoupon) {
-        calculateDiscount(appliedCoupon);
-      }
-      toast.success('Item removed from cart');
-    } catch (error) {
-      console.error('Remove item error:', error);
-      toast.error('Failed to remove item');
-    }
-  };
-
-  const clearCart = async () => {
-    try {
-      await axios.delete(`${API_URL}/cart`);
-      await fetchCart();
-      setAppliedCoupon(null);
-      setDiscount(0);
-      localStorage.removeItem('appliedCoupon');
-      toast.success('Cart cleared');
-    } catch (error) {
-      console.error('Clear cart error:', error);
-      toast.error('Failed to clear cart');
-    }
-  };
-
-  const handleCheckout = () => {
-    navigate('/checkout');
-  };
-
   const getSubtotal = () => {
     if (!cart) return 0;
     return cart.totalPrice;
@@ -170,6 +108,10 @@ const Cart = () => {
     const tax = getTax();
     const total = subtotal + tax - discount;
     return total > 0 ? total : 0;
+  };
+
+  const handleCheckout = () => {
+    navigate('/checkout');
   };
 
   if (loading) {

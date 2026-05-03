@@ -556,8 +556,8 @@ const AdminDashboard = () => {
                 </button>
               </div>
             </div>
-            <div className="h-64" id="revenue-chart">
-              <ResponsiveContainer width="100%" height="100%">
+<div className="h-64 w-full min-h-64" id="revenue-chart">
+                <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats.monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                   <XAxis dataKey="month" stroke="#666" />

@@ -3,20 +3,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { ArrowLeft, MapPin, LocateFixed, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, LocateFixed, Loader2 } from 'lucide-react';
 
 const AdminAddLocation = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
-  const [locationError, setLocationError] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     address: '',
     coordinates: {
-      lat: '',
-      lng: ''
+      lat: 19.0777,
+      lng: 72.8777
     },
     deliveryRadius: 10
   });
@@ -41,13 +40,12 @@ const AdminAddLocation = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name.startsWith('coord.')) {
-      const field = name.split('.')[1];
+    if (name === 'lat' || name === 'lng') {
       setFormData(prev => ({
         ...prev,
         coordinates: {
           ...prev.coordinates,
-          [field]: parseFloat(value) || ''
+          [name]: parseFloat(value) || 0
         }
       }));
     } else {
@@ -59,56 +57,32 @@ const AdminAddLocation = () => {
   };
 
   const detectCurrentLocation = () => {
-    setDetectingLocation(true);
-    setLocationError(null);
-    
-    // Check if geolocation is supported
     if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser');
       toast.error('Geolocation is not supported by your browser');
-      setDetectingLocation(false);
       return;
     }
 
+    setDetectingLocation(true);
+    toast.loading('Detecting your location...');
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
+        toast.dismiss();
         setFormData(prev => ({
           ...prev,
           coordinates: {
-            lat: latitude,
-            lng: longitude
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
           }
         }));
         toast.success('Location detected successfully!');
         setDetectingLocation(false);
       },
       (error) => {
+        toast.dismiss();
         console.error('Geolocation error:', error);
-        let errorMessage = 'Failed to detect location.';
-        
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied. Please allow location access in your browser settings.';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information is unavailable. Please try again or enter coordinates manually.';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Location request timed out. Please try again or enter coordinates manually.';
-            break;
-          default:
-            errorMessage = 'An unknown error occurred. Please enter coordinates manually.';
-        }
-        
-        setLocationError(errorMessage);
-        toast.error(errorMessage);
+        toast.error('Unable to detect location. Please enter manually.');
         setDetectingLocation(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
       }
     );
   };
@@ -118,13 +92,6 @@ const AdminAddLocation = () => {
     setLoading(true);
 
     try {
-      // Validate coordinates
-      if (!formData.coordinates.lat || !formData.coordinates.lng) {
-        toast.error('Please provide coordinates for the location');
-        setLoading(false);
-        return;
-      }
-
       if (id) {
         await axios.put(`${API_URL}/locations/${id}`, formData);
         toast.success('Location updated successfully');
@@ -135,7 +102,7 @@ const AdminAddLocation = () => {
       navigate('/admin/locations');
     } catch (error) {
       console.error('Location save error:', error);
-      toast.error(error.response?.data?.message || 'Failed to save location');
+      toast.error('Failed to save location');
     } finally {
       setLoading(false);
     }
@@ -165,7 +132,7 @@ const AdminAddLocation = () => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="e.g., BrewHeaven Andheri"
+              placeholder="e.g., BrewHeaven Main"
               className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-white"
               required
             />
@@ -179,13 +146,12 @@ const AdminAddLocation = () => {
               name="address"
               value={formData.address}
               onChange={handleChange}
-              placeholder="e.g., 123 Main Street, Andheri East"
+              placeholder="123 Coffee Lane, Mumbai"
               className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-white"
               required
             />
           </div>
 
-          {/* Coordinates Section */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-300">
@@ -205,54 +171,37 @@ const AdminAddLocation = () => {
                 ) : (
                   <>
                     <LocateFixed className="w-4 h-4" />
-                    Detect Current Location
+                    Detect Location
                   </>
                 )}
               </button>
             </div>
-
-            {/* Error Message */}
-            {locationError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-3">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-400 mt-0.5" />
-                  <p className="text-sm text-red-400">{locationError}</p>
-                </div>
-              </div>
-            )}
-
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Latitude</label>
                 <input
-                  name="coord.lat"
+                  name="lat"
                   type="number"
                   step="any"
                   value={formData.coordinates.lat}
                   onChange={handleChange}
-                  placeholder="19.0760"
+                  placeholder="19.0777"
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-white"
-                  required
                 />
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Longitude</label>
                 <input
-                  name="coord.lng"
+                  name="lng"
                   type="number"
                   step="any"
                   value={formData.coordinates.lng}
                   onChange={handleChange}
                   placeholder="72.8777"
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-white"
-                  required
                 />
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              <MapPin className="w-3 h-3 inline mr-1" />
-              Click "Detect Current Location" to auto-fill coordinates
-            </p>
           </div>
 
           <div>
@@ -267,9 +216,6 @@ const AdminAddLocation = () => {
               placeholder="10"
               className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-white"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Maximum delivery distance from this location (default: 10km)
-            </p>
           </div>
 
           <div className="flex gap-4 pt-4">

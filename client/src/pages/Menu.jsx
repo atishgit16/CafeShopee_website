@@ -1,7 +1,9 @@
+// src/pages/Menu.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import { ShoppingCart, Plus } from 'lucide-react';
 
@@ -10,6 +12,7 @@ const Menu = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const { isAuthenticated } = useAuth();
+  const { addToCart } = useCart(); // Get addToCart from CartContext
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -30,22 +33,17 @@ const Menu = () => {
     }
   };
 
-  const addToCart = async (productId) => {
+  const handleAddToCart = async (productId) => {
     if (!isAuthenticated) {
       toast.error('Please login to add items to cart');
       navigate('/login');
       return;
     }
 
-    try {
-      const response = await axios.post(`${API_URL}/cart/add`, {
-        productId,
-        quantity: 1
-      });
-      toast.success('Item added to cart!');
-    } catch (error) {
-      console.error('Add to cart error:', error);
-      toast.error('Failed to add item to cart');
+    const success = await addToCart(productId);
+    if (success) {
+      // No need to do anything else - CartContext handles the refresh
+      // The cart badge will update automatically
     }
   };
 
@@ -121,7 +119,7 @@ const Menu = () => {
                     ₹{product.price.toFixed(2)}
                   </span>
                   <button
-                    onClick={() => addToCart(product._id)}
+                    onClick={() => handleAddToCart(product._id)}
                     disabled={product.stock === 0}
                     className={`p-2 rounded-full transition-colors ${
                       product.stock === 0

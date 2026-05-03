@@ -1,14 +1,16 @@
-// components/Header.jsx - Updated version
+// components/Header.jsx - Updated with CartContext
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { ShoppingCart, LogOut, Menu, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef, contactRef }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
+  const { cartCount } = useCart(); // Get cartCount from CartContext
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,16 +26,16 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
     { name: 'About', path: '/about', ref: aboutRef },
     { name: 'Menu', path: '/menu', ref: menuRef },
     { name: 'Contact', path: '/contact', ref: contactRef },
-    ...(isAuthenticated ? [{ name: 'Cart', path: '/cart' }] : []),
+    ...(isAuthenticated ? [
+      { name: 'My Orders', path: '/my-orders' }
+    ] : []),
     ...(isAdmin ? [{ name: 'Admin', path: '/admin' }] : []),
   ];
 
   const handleNavigation = (item) => {
     if (item.ref && scrollToSection && location.pathname === '/') {
-      // If on homepage, scroll to section
       scrollToSection(item.ref);
     } else if (item.ref && scrollToSection) {
-      // Navigate to homepage and then scroll
       navigate('/');
       setTimeout(() => {
         scrollToSection(item.ref);
@@ -54,11 +56,9 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
 
   return (
     <>
-     <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-  scrolled
-    ? 'bg-black/70 backdrop-blur-xl py-1 shadow-xl border-b border-white/10'
-    : 'bg-black/30 backdrop-blur-sm py-1'
-}`}>
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+        scrolled ? 'bg-black/70 backdrop-blur-xl py-1 shadow-xl border-b border-white/10' : 'bg-black/30 backdrop-blur-sm py-1'
+      }`}>
         <div className="container mx-auto px-6 flex justify-between items-center">
           {/* Logo */}
           <motion.div
@@ -98,7 +98,7 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
                 <Link to="/cart" className="relative text-white hover:text-amber-400 transition-colors">
                   <ShoppingCart className="w-6 h-6" />
                   <span className="absolute -top-2 -right-2 bg-amber-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    0
+                    {cartCount}
                   </span>
                 </Link>
                 <div className="flex items-center space-x-3">

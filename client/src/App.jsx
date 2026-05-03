@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
+
 // Pages
 import Home from './pages/Home';
 import Menu from './pages/Menu';
@@ -24,20 +25,27 @@ import AdminAddCoupon from './pages/AdminAddCoupon';
 import AdminLocations from './pages/AdminLocations';
 import AdminAddLocation from './pages/AdminAddLocation';
 import AdminLocationTables from './pages/AdminLocationTables';
+import UserOrders from './pages/UserOrders';
+import OrderTracking from './pages/OrderTracking';
+import { CartProvider } from './context/CartContext';
 
 // Components
 import Header from './components/Header';
 import Footer from './components/Footer';
 
 function App() {
+
   
+
   //verify api is correctly loaded from .env
 
    console.log('API URL:', import.meta.env.VITE_API_URL);
 
   return (
     <Router>
+
       <AuthProvider>
+         <CartProvider>
         <div className="min-h-screen flex flex-col bg-black">
           <Header />
           <main className="flex-grow">
@@ -63,7 +71,18 @@ function App() {
                   <OrderSuccess />
                 </ProtectedRoute>
               } />
-              
+              <Route path="/order-tracking/:orderId" element={
+  <ProtectedRoute>
+    <OrderTracking />
+  </ProtectedRoute>
+} />
+// In the protected routes section, add:
+<Route path="/my-orders" element={
+  <ProtectedRoute>
+    <UserOrders />
+  </ProtectedRoute>
+} />
+
               {/* Admin Routes - Fixed paths with /admin prefix */}
               <Route path="/admin" element={
                 <ProtectedRoute requireAdmin>
@@ -135,6 +154,7 @@ function App() {
           <Footer />
           <Toaster position="top-right" />
         </div>
+        </CartProvider>
       </AuthProvider>
     </Router>
   );

@@ -13,11 +13,13 @@ const locationSchema = new mongoose.Schema({
   coordinates: {
     lat: {
       type: Number,
-      required: true
+      required: true,
+      default: 19.0777 // Mumbai default
     },
     lng: {
       type: Number,
-      required: true
+      required: true,
+      default: 72.8777 // Mumbai default
     }
   },
   deliveryRadius: {

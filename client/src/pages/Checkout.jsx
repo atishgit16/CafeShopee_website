@@ -1,4 +1,4 @@
-// src/pages/Checkout.jsx
+// src/pages/Checkout.jsx - Updated Version with Auto-Location
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -18,9 +18,14 @@ import {
   Store,
   Truck,
   Table,
-  Map
+  LocateFixed
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { 
+  CardElement, 
+  useStripe, 
+  useElements 
+} from '@stripe/react-stripe-js';
 
 const Checkout = () => {
   const [cart, setCart] = useState(null);
@@ -31,14 +36,6 @@ const Checkout = () => {
   const [selectedLocation, setSelectedLocation] = useState('');
   const [tables, setTables] = useState([]);
   const [selectedTable, setSelectedTable] = useState('');
-  const [address, setAddress] = useState({
-    street: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: '',
-    phone: ''
-  });
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [cardDetails, setCardDetails] = useState({
     cardNumber: '',
@@ -51,6 +48,13 @@ const Checkout = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [discount, setDiscount] = useState(0);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+  const [stripeError, setStripeError] = useState(null);
+  const [paymentIntentId, setPaymentIntentId] = useState(null);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [userCoordinates, setUserCoordinates] = useState(null);
+  
+  const stripe = useStripe();
+  const elements = useElements();
   
   const DEFAULT_UPI_ID = 'brewheaven@upi';
   const { isAuthenticated } = useAuth();
@@ -66,6 +70,8 @@ const Checkout = () => {
     }
     fetchCart();
     fetchLocations();
+    // Auto-detect location on load
+    detectUserLocation();
     // Check for applied coupon
     const savedCoupon = localStorage.getItem('appliedCoupon');
     if (savedCoupon) {
@@ -148,16 +154,6 @@ const Checkout = () => {
     setSelectedLocation('');
     setSelectedTable('');
     setTables([]);
-    if (type === 'dine-in') {
-      setAddress({
-        street: '',
-        city: '',
-        state: '',
-        zipCode: '',
-        country: '',
-        phone: ''
-      });
-    }
   };
 
   const handleLocationChange = (e) => {
@@ -171,18 +167,45 @@ const Checkout = () => {
     }
   };
 
-  const handleAddressChange = (e) => {
-    setAddress({
-      ...address,
-      [e.target.name]: e.target.value
-    });
-  };
-
   const handleCardChange = (e) => {
     setCardDetails({
       ...cardDetails,
       [e.target.name]: e.target.value
     });
+  };
+
+  const detectUserLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setDetectingLocation(true);
+    toast.loading('Detecting your location...');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        toast.dismiss();
+        const coords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        setUserCoordinates(coords);
+        toast.success('Location detected successfully!');
+        setDetectingLocation(false);
+      },
+      (error) => {
+        toast.dismiss();
+        console.error('Geolocation error:', error);
+        toast.error('Unable to detect your location. Please try again.');
+        setDetectingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -201,27 +224,21 @@ const Checkout = () => {
     }
 
     if (orderType === 'delivery') {
-      const requiredFields = ['street', 'city', 'state', 'zipCode', 'country', 'phone'];
-      const missingFields = requiredFields.filter(field => !address[field]);
-      
-      if (missingFields.length > 0) {
-        toast.error('Please fill in all address fields including phone number');
-        return;
-      }
-      if (!/^\d{10}$/.test(address.phone)) {
-        toast.error('Please enter a valid 10-digit phone number');
+      if (!userCoordinates) {
+        toast.error('Location not detected. Please try again.');
         return;
       }
     }
 
     // Validate payment method
     if (paymentMethod === 'card') {
-      if (!cardDetails.cardNumber || !cardDetails.cardName || !cardDetails.expiry || !cardDetails.cvv) {
-        toast.error('Please fill in all card details');
+      if (!stripe || !elements) {
+        toast.error('Payment system not ready');
         return;
       }
-      if (cardDetails.cardNumber.replace(/\s/g, '').length < 16) {
-        toast.error('Please enter a valid 16-digit card number');
+      
+      if (!cardDetails.cardName) {
+        toast.error('Please enter cardholder name');
         return;
       }
     }
@@ -232,11 +249,53 @@ const Checkout = () => {
     }
 
     setSubmitting(true);
+    setStripeError(null);
 
     try {
+      let paymentIntentIdValue = null;
+      let paymentStatus = 'pending';
+
+      // Process card payment via Stripe
+      if (paymentMethod === 'card') {
+        const finalTotal = getFinalTotal();
+        
+        // Create payment intent first
+        const paymentIntentResponse = await axios.post(`${API_URL}/payments/create-payment-intent`, {
+          amount: finalTotal
+        });
+
+        const { clientSecret, paymentIntentId } = paymentIntentResponse.data;
+        setPaymentIntentId(paymentIntentId);
+        paymentIntentIdValue = paymentIntentId;
+
+        // Confirm payment with card element
+        const cardElement = elements.getElement(CardElement);
+        const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: cardElement,
+            billing_details: {
+              name: cardDetails.cardName
+            }
+          }
+        });
+
+        if (error) {
+          setStripeError(error.message);
+          toast.error(error.message);
+          setSubmitting(false);
+          return;
+        }
+
+        paymentIntentIdValue = paymentIntent.id;
+        paymentStatus = paymentIntent.status;
+      }
+
+      // Prepare order data
       const orderData = {
         orderType,
         paymentMethod,
+        paymentIntentId: paymentIntentIdValue,
+        paymentStatus,
         upiId: paymentMethod === 'upi' ? (upiId || DEFAULT_UPI_ID) : undefined,
         cardDetails: paymentMethod === 'card' ? cardDetails : undefined,
         coupon: appliedCoupon
@@ -248,19 +307,15 @@ const Checkout = () => {
       }
 
       if (orderType === 'delivery') {
-        orderData.address = address;
-        orderData.deliveryCoordinates = {
-          lat: 19.0760,
-          lng: 72.8777
-        };
+        orderData.deliveryCoordinates = userCoordinates;
       }
 
-      const response = await axios.post(`${API_URL}/orders`, orderData);
+      const orderResponse = await axios.post(`${API_URL}/orders`, orderData);
       
       localStorage.removeItem('appliedCoupon');
       
-      if (response.data.redirectTo) {
-        navigate(response.data.redirectTo);
+      if (orderResponse.data.redirectTo) {
+        navigate(orderResponse.data.redirectTo);
       } else {
         navigate('/order-success');
       }
@@ -272,6 +327,22 @@ const Checkout = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const getSubtotal = () => {
+    if (!cart) return 0;
+    return cart.totalPrice;
+  };
+
+  const getTax = () => {
+    return getSubtotal() * 0.10;
+  };
+
+  const getFinalTotal = () => {
+    const subtotal = getSubtotal();
+    const tax = getTax();
+    const total = subtotal + tax - discount;
+    return total > 0 ? total : 0;
   };
 
   const formatCardNumber = (value) => {
@@ -297,27 +368,11 @@ const Checkout = () => {
     });
   };
 
-  const upiQrData = cart ? `upi://pay?pa=${DEFAULT_UPI_ID}&pn=BrewHeaven&am=${(cart.totalPrice * 1.10 - discount).toFixed(2)}&cu=INR` : null;
+  const upiQrData = cart ? `upi://pay?pa=${DEFAULT_UPI_ID}&pn=BrewHeaven&am=${getFinalTotal().toFixed(2)}&cu=INR` : null;
 
   const copyUpiId = () => {
     navigator.clipboard.writeText(DEFAULT_UPI_ID);
     toast.success('UPI ID copied to clipboard!');
-  };
-
-  const getSubtotal = () => {
-    if (!cart) return 0;
-    return cart.totalPrice;
-  };
-
-  const getTax = () => {
-    return getSubtotal() * 0.10;
-  };
-
-  const getFinalTotal = () => {
-    const subtotal = getSubtotal();
-    const tax = getTax();
-    const total = subtotal + tax - discount;
-    return total > 0 ? total : 0;
   };
 
   if (loading) {
@@ -499,78 +554,37 @@ const Checkout = () => {
                 </div>
               )}
 
-              {/* Delivery Options */}
+              {/* Delivery Options - Simplified */}
               {orderType === 'delivery' && (
                 <div className="space-y-3 animate-fade-in-up">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone className="w-5 h-5 text-gray-500" />
-                    </div>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={address.phone}
-                      onChange={handleAddressChange}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white transition-colors"
-                      placeholder="Phone Number *"
-                      required
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    name="street"
-                    value={address.street}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white transition-colors"
-                    placeholder="Street Address *"
-                    required
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      name="city"
-                      value={address.city}
-                      onChange={handleAddressChange}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white transition-colors"
-                      placeholder="City *"
-                      required
-                    />
-                    <input
-                      type="text"
-                      name="state"
-                      value={address.state}
-                      onChange={handleAddressChange}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white transition-colors"
-                      placeholder="State *"
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      name="zipCode"
-                      value={address.zipCode}
-                      onChange={handleAddressChange}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white transition-colors"
-                      placeholder="ZIP Code *"
-                      required
-                    />
-                    <input
-                      type="text"
-                      name="country"
-                      value={address.country}
-                      onChange={handleAddressChange}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white transition-colors"
-                      placeholder="Country *"
-                      required
-                    />
-                  </div>
                   <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3">
                     <p className="text-sm text-blue-400">
-                      <Map className="w-4 h-4 inline mr-1" />
-                      Delivery available within 10km radius
+                      <LocateFixed className="w-4 h-4 inline mr-1" />
+                      {userCoordinates ? (
+                        <span>Location detected: {userCoordinates.lat.toFixed(4)}, {userCoordinates.lng.toFixed(4)}</span>
+                      ) : (
+                        <span>Detecting your location...</span>
+                      )}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={detectUserLocation}
+                    disabled={detectingLocation}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {detectingLocation ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Detecting...
+                      </>
+                    ) : (
+                      <>
+                        <LocateFixed className="w-4 h-4" />
+                        {userCoordinates ? 'Re-detect Location' : 'Detect Location'}
+                      </>
+                    )}
+                  </button>
                 </div>
               )}
 
@@ -580,6 +594,7 @@ const Checkout = () => {
                   Payment Method <span className="text-red-400">*</span>
                 </label>
                 <div className="grid grid-cols-1 gap-3">
+                  {/* Card Option - Stripe */}
                   <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${paymentMethod === 'card' ? 'border-amber-500 bg-amber-500/10' : 'border-gray-700 hover:border-gray-600'}`}>
                     <input
                       type="radio"
@@ -593,21 +608,9 @@ const Checkout = () => {
                     <span className="text-gray-300">Credit / Debit Card</span>
                   </label>
 
+                  {/* Card Element - Show when card is selected */}
                   {paymentMethod === 'card' && (
                     <div className="ml-8 space-y-3 animate-fade-in-up">
-                      <div>
-                        <label className="block text-sm text-gray-400 mb-1">Card Number</label>
-                        <input
-                          type="text"
-                          name="cardNumber"
-                          value={cardDetails.cardNumber}
-                          onChange={handleCardNumberChange}
-                          placeholder="1234 5678 9012 3456"
-                          className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white"
-                          maxLength="19"
-                          required
-                        />
-                      </div>
                       <div>
                         <label className="block text-sm text-gray-400 mb-1">Cardholder Name</label>
                         <input
@@ -615,42 +618,39 @@ const Checkout = () => {
                           name="cardName"
                           value={cardDetails.cardName}
                           onChange={handleCardChange}
-                          placeholder="John Doe"
+                          placeholder="Name of Carder Owner"
                           className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white"
                           required
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-sm text-gray-400 mb-1">Expiry Date</label>
-                          <input
-                            type="text"
-                            name="expiry"
-                            value={cardDetails.expiry}
-                            onChange={handleCardChange}
-                            placeholder="MM/YY"
-                            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white"
-                            maxLength="5"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-400 mb-1">CVV</label>
-                          <input
-                            type="password"
-                            name="cvv"
-                            value={cardDetails.cvv}
-                            onChange={handleCardChange}
-                            placeholder="•••"
-                            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-amber-500 text-white"
-                            maxLength="4"
-                            required
-                          />
-                        </div>
+                      <div className="bg-gray-800/50 rounded-xl p-3">
+                        <CardElement 
+                          options={{
+                            style: {
+                              base: {
+                                fontSize: '16px',
+                                color: '#fff',
+                                '::placeholder': {
+                                  color: '#666',
+                                },
+                                iconColor: '#F59E0B',
+                              },
+                              invalid: {
+                                color: '#ef4444',
+                                iconColor: '#ef4444',
+                              },
+                            },
+                            hidePostalCode: true,
+                          }}
+                        />
                       </div>
+                      {stripeError && (
+                        <p className="text-red-400 text-sm">{stripeError}</p>
+                      )}
                     </div>
                   )}
 
+                  {/* Cash Option */}
                   <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${paymentMethod === 'cash' ? 'border-amber-500 bg-amber-500/10' : 'border-gray-700 hover:border-gray-600'}`}>
                     <input
                       type="radio"
@@ -664,6 +664,7 @@ const Checkout = () => {
                     <span className="text-gray-300">Cash on Delivery</span>
                   </label>
 
+                  {/* UPI Option */}
                   <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${paymentMethod === 'upi' ? 'border-amber-500 bg-amber-500/10' : 'border-gray-700 hover:border-gray-600'}`}>
                     <input
                       type="radio"
@@ -735,7 +736,7 @@ const Checkout = () => {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || !stripe}
                 className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-semibold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {submitting ? (

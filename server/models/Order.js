@@ -51,12 +51,7 @@ const orderSchema = new mongoose.Schema({
     ref: 'Location'
   },
   deliveryAddress: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: String,
-    phone: String,
+    
     coordinates: {
       lat: Number,
       lng: Number
@@ -78,7 +73,8 @@ const orderSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  
 });
 
 module.exports = mongoose.model('Order', orderSchema);

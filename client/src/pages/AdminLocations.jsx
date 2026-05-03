@@ -7,10 +7,11 @@ import {
   Plus, 
   Edit, 
   Trash2, 
-  MapPin, 
+  Store, 
   Search,
   ArrowLeft,
-  Table
+  Table,
+  MapPin
 } from 'lucide-react';
 
 const AdminLocations = () => {
@@ -76,13 +77,13 @@ const AdminLocations = () => {
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-amber-500 bg-clip-text text-transparent">
               Location Management
             </h1>
           </div>
           <button
             onClick={() => navigate('/admin/add-location')}
-            className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add Location
@@ -105,23 +106,35 @@ const AdminLocations = () => {
             {filteredLocations.map((location) => (
               <div
                 key={location._id}
-                className="group bg-gray-800/50 rounded-2xl p-6 border border-gray-700 hover:border-amber-500/30 transition-all"
+                className="group bg-gray-800/50 rounded-2xl p-6 border border-gray-700 hover:border-blue-500/30 transition-all"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-amber-400">{location.name}</h3>
+                    <h3 className="text-xl font-bold text-blue-400">{location.name}</h3>
                     <p className="text-sm text-gray-400">{location.address}</p>
-                    <p className="text-xs text-gray-500">
-                      Delivery Radius: {location.deliveryRadius || 10}km
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Tables: {location.tables?.length || 0}
-                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <MapPin className="w-4 h-4 text-gray-500" />
+                      <span className="text-xs text-gray-500">
+                        {location.coordinates?.lat}, {location.coordinates?.lng}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Store className="w-4 h-4 text-gray-500" />
+                      <span className="text-xs text-gray-500">
+                        Delivery Radius: {location.deliveryRadius || 10}km
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Table className="w-4 h-4 text-gray-500" />
+                      <span className="text-xs text-gray-500">
+                        Tables: {location.tables?.length || 0}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => navigate(`/admin/edit-location/${location._id}`)}
-                      className="p-2 bg-gray-700 rounded-full hover:bg-amber-600 transition-colors"
+                      className="p-2 bg-gray-700 rounded-full hover:bg-blue-600 transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
@@ -133,15 +146,9 @@ const AdminLocations = () => {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="text-xs text-gray-400">
-                    {location.coordinates?.lat}, {location.coordinates?.lng}
-                  </span>
-                </div>
                 <button
                   onClick={() => navigate(`/admin/location/${location._id}/tables`)}
-                  className="mt-4 w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl text-sm font-semibold transition-all"
+                  className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-sm font-semibold transition-all"
                 >
                   <Table className="w-4 h-4 inline mr-2" />
                   Manage Tables
@@ -152,7 +159,7 @@ const AdminLocations = () => {
 
           {filteredLocations.length === 0 && (
             <div className="text-center py-12">
-              <MapPin className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+              <Store className="w-16 h-16 mx-auto text-gray-600 mb-4" />
               <p className="text-gray-400">No locations found</p>
             </div>
           )}

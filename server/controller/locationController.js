@@ -31,10 +31,11 @@ exports.createLocation = async (req, res) => {
   try {
     const { name, address, coordinates, deliveryRadius } = req.body;
     
+    // Use Mumbai default if coordinates not provided
     const location = new Location({
       name,
       address,
-      coordinates,
+      coordinates: coordinates || { lat: 19.0777, lng: 72.8777 },
       deliveryRadius: deliveryRadius || 10
     });
 

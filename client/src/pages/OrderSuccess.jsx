@@ -1,9 +1,15 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Home, Coffee } from 'lucide-react';
+// src/pages/OrderSuccess.jsx
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { CheckCircle, Home, Coffee, Package } from 'lucide-react';
 
 const OrderSuccess = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get orderId from the URL query parameters or state
+  const searchParams = new URLSearchParams(location.search);
+  const orderId = searchParams.get('orderId') || '';
 
   return (
     <div className="min-h-screen bg-black text-white pt-20 flex items-center justify-center">
@@ -39,6 +45,13 @@ const OrderSuccess = () => {
           >
             <Coffee className="w-5 h-5 inline mr-2" />
             Order More
+          </button>
+          <button
+            onClick={() => navigate(`/order-tracking/${orderId}`)}
+            className="block w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-semibold transition-all transform hover:scale-105"
+          >
+            <Package className="w-5 h-5 inline mr-2" />
+            Track Your Order
           </button>
         </div>
       </div>
