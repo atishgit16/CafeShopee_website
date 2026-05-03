@@ -7,7 +7,8 @@ import Header from '../components/Header';
 
 import atishImg from "../assets/atish.jpeg";
 import shreshaImg from "../assets/shresha.jpeg";
-
+import cursor from "../assets/cursor.jpg";
+import deveshImg from "../assets/deveshImg.jpeg";
 
 // --- 3D Coffee Bean Component ---
 const CoffeeBean3D = ({ position, color = "#4E342E", speed = 1 }) => {
@@ -183,6 +184,7 @@ const AboutPage = () => {
   const storyRef = useRef(null);
   const valuesRef = useRef(null);
   const teamRef = useRef(null);
+  const foundationRef = useRef(null);
   const contactRef = useRef(null);
 
   useEffect(() => {
@@ -242,33 +244,63 @@ const AboutPage = () => {
           </div>
         </section>
 
-       
-        {/* Meet Our Team Section */}
- <section ref={teamRef} className="py-24 px-6 bg-gradient-to-t from-gray-900/80 to-black/80 backdrop-blur-sm">
-  <div className="container mx-auto max-w-6xl">
-    <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-amber-400">Meet Our Team</h2>
-    
-    <div className="flex flex-wrap justify-center gap-10 md:gap-16">
-      {[
-        { name: "Atish Ghanekar", role: "Master Roaster & Founder", img: atishImg },
-        { name: "Shresha Ghadi", role: "Head Barista", img: shreshaImg },
-      ].map((member, idx) => (
-        <div key={idx} className="group text-center transform hover:scale-105 transition-all duration-500">
-          <div className="relative w-40 h-40 md:w-48 md:h-48 mx-auto rounded-full overflow-hidden mb-4 shadow-xl border-2 border-amber-500/30 group-hover:border-amber-500 transition-colors">
-            <img 
-              src={member.img} 
-              alt={member.name} 
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-            />
+        {/* Foundation of BrewHeaven Section */}
+        <section ref={foundationRef} className="py-24 px-6 bg-gradient-to-b from-black/80 to-gray-900/80 backdrop-blur-sm">
+          <div className="container mx-auto max-w-5xl">
+            <div className="flex flex-col md:flex-row items-center gap-12">
+              <div className="md:w-1/2 flex justify-center">
+                <img 
+                  src="/logo1.png" 
+                  alt="BrewHeaven Logo" 
+                  className="w-48 h-48 md:w-64 md:h-64 object-contain hover:scale-110 transition-transform duration-500"
+                />
+              </div>
+              <div className="md:w-1/2">
+                <h2 className="text-4xl md:text-5xl font-bold mb-6 text-amber-400">Foundation of BrewHeaven</h2>
+                <p className="text-lg text-gray-300 leading-relaxed mb-4">
+                  BrewHeaven was founded in 2023 by a group of coffee enthusiasts who shared a common dream: 
+                  to create a space where the art of coffee brewing meets the warmth of community. What started 
+                  as a small passion project in a garage has now grown into a beloved café that serves over 
+                  500 cups of coffee every day.
+                </p>
+                <p className="text-lg text-gray-300 leading-relaxed">
+                  From our humble beginnings to where we are today, our commitment to quality, sustainability, 
+                  and innovation has never wavered. Every coffee bean we roast, every cup we serve, and every 
+                  smile we share is a reflection of our founding principles.
+                </p>
+              </div>
+            </div>
           </div>
-          <h3 className="text-xl font-bold text-white">{member.name}</h3>
-          <p className="text-amber-400 text-sm">{member.role}</p>
-        </div>
-      ))}
-    </div>
+        </section>
 
-  </div>
-</section>
+        {/* Meet Our Team Section */}
+        <section ref={teamRef} className="py-24 px-6 bg-gradient-to-t from-gray-900/80 to-black/80 backdrop-blur-sm">
+          <div className="container mx-auto max-w-6xl">
+            <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-amber-400">Meet Our Team</h2>
+            
+            <div className="flex flex-wrap justify-center gap-10 md:gap-16">
+              {[
+                { name: "Atish Ghanekar", role: "Founder", img: atishImg },
+                { name: "Shresha Ghadi", role: "Head ", img: shreshaImg },
+                { name: "Devesh Ghadigaokar", role: "Operations Manager", img: deveshImg },
+                        { name: "BrewHeaven", role: "Foundation", img: cursor },
+              ].map((member, idx) => (
+                <div key={idx} className="group text-center transform hover:scale-105 transition-all duration-500">
+                  <div className="relative w-40 h-40 md:w-48 md:h-48 mx-auto rounded-full overflow-hidden mb-4 shadow-xl border-2 border-amber-500/30 group-hover:border-amber-500 transition-colors">
+                    <img 
+                      src={member.img} 
+                      alt={member.name} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">{member.name}</h3>
+                  <p className="text-amber-400 text-sm">{member.role}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Testimonials / Quote Section */}
         <section className="py-20 px-6 bg-black/50 backdrop-blur-sm">
           <div className="container mx-auto max-w-4xl text-center">
@@ -295,7 +327,7 @@ const AboutPage = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      <span>97 Coffee Lane , Andheri , Mumbai , CA 94103</span>
+                      <span>97 Coffee Lane, Andheri, Mumbai, 94103</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -329,8 +361,6 @@ const AboutPage = () => {
             </div>
           </div>
         </section>
-
-        
       </div>
 
       {/* Custom CSS Animations */}
