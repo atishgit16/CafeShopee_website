@@ -4,7 +4,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Float, Text3D, Sphere } from '@react-three/drei';
 import * as THREE from 'three';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
+
 import atishImg from "../assets/atish.jpeg";
 import shreshaImg from "../assets/shresha.jpeg";
 
@@ -375,8 +375,7 @@ const AboutPage = () => {
           </div>
         </section>
 
-        {/* Footer */}
-        <Footer />
+        
       </div>
 
       {/* Custom CSS Animations */}

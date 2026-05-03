@@ -336,10 +336,7 @@ const HomePage = () => {
         <section ref={heroRef} className="min-h-screen flex items-center justify-center text-center px-4 relative">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0a] z-0"></div>
           <div className="relative z-10 max-w-4xl animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs mb-6">
-              <Sparkles className="w-3 h-3" />
-              <span>Premium Artisan Coffee Since 2020</span>
-            </div>
+            
             <h1 className="text-6xl md:text-8xl font-bold mb-6 leading-tight">
               <span className="bg-gradient-to-r from-amber-200 via-amber-400 to-amber-600 bg-clip-text text-transparent">
                 BrewHeaven
@@ -441,7 +438,7 @@ const HomePage = () => {
                     Every cup tells a story of dedication, craftsmanship, and love for the perfect brew.
                   </p>
                   <button 
-                    onClick={() => navigate("/about")}
+                    onClick={() => navigate("/About")}
                     className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-full font-semibold transition-all flex items-center gap-2"
                   >
                     Discover Our Journey <ChevronRight className="w-4 h-4" />
@@ -660,40 +657,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Gallery Section - Mosaic */}
-        <section className="py-24 px-6 bg-gradient-to-t from-[#0a0a0a] to-[#111]">
-          <div className="container mx-auto max-w-6xl">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs mb-4">
-                <Sparkles className="w-3 h-3" />
-                <span>Visual Stories</span>
-              </div>
-              <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-amber-200 to-amber-600 bg-clip-text text-transparent">
-                Heavenly Moments
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=2070",
-                "https://images.unsplash.com/photo-1507133750040-4a8f57021571?q=80&w=2070",
-                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=2070",
-                "https://images.unsplash.com/photo-1498804103071-a0230ba4468d?q=80&w=2070",
-                "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070",
-                "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2070",
-                "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2070",
-                "https://images.unsplash.com/photo-1453614512568-c4024d6e5bac?q=80&w=2070"
-              ].map((url, idx) => (
-                <motion.div
-                  key={idx}
-                  whileHover={{ scale: 1.05 }}
-                  className={`overflow-hidden rounded-xl shadow-xl ${idx === 0 || idx === 3 ? 'row-span-2' : ''}`}
-                >
-                  <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+
 
         {/* Contact Section - Premium */}
         <section ref={contactRef} className="py-24 px-6 bg-gradient-to-b from-[#0a0a0a] to-[#000]">

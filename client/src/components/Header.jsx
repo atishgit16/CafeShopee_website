@@ -1,4 +1,4 @@
-// components/Header.jsx - Updated with CartContext
+// components/Header.jsx - Updated with CartContext and responsive mobile menu
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -59,7 +59,7 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
       <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
         scrolled ? 'bg-black/70 backdrop-blur-xl py-1 shadow-xl border-b border-white/10' : 'bg-black/30 backdrop-blur-sm py-1'
       }`}>
-        <div className="container mx-auto px-6 flex justify-between items-center">
+        <div className="container mx-auto px-4 sm:px-6 flex justify-between items-center h-16 sm:h-auto">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -71,7 +71,7 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
             <img 
               src="/logo1.png" 
               alt="BrewHeaven Logo" 
-              className="h-20 w-auto object-contain hover:scale-110 transition duration-300"
+              className="h-12 sm:h-16 md:h-20 w-auto object-contain hover:scale-110 transition duration-300"
             />
           </motion.div>
 
@@ -145,7 +145,7 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Responsive 3 lines max */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ 
@@ -154,10 +154,10 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
           pointerEvents: mobileMenuOpen ? 'auto' : 'none'
         }}
         transition={{ duration: 0.3 }}
-        className={`fixed top-20 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg p-4 md:hidden`}
+        className={`fixed top-16 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg p-4 md:hidden max-h-[80vh] overflow-y-auto`}
       >
-        <div className="flex flex-col space-y-4">
-          {navItems.map((item) => (
+        <div className="flex flex-col space-y-2">
+          {navItems.slice(0, 3).map((item) => (
             <button
               key={item.name}
               onClick={() => handleNavigation(item)}
@@ -166,6 +166,22 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
               {item.name}
             </button>
           ))}
+          
+          {/* Show remaining items in hamburger menu */}
+          {navItems.length > 3 && (
+            <div className="mt-2 border-t border-white/10 pt-2">
+              {navItems.slice(3).map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => handleNavigation(item)}
+                  className="text-lg font-medium hover:text-amber-400 transition-colors py-2 border-b border-white/10 text-left w-full"
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+          )}
+          
           {isAuthenticated ? (
             <>
               <button 
@@ -191,7 +207,7 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
                   navigate('/register');
                   setMobileMenuOpen(false);
                 }}
-                className="bg-amber-600 hover:bg-amber-700 px-5 py-3 rounded-full font-semibold transition-all text-center"
+                className="bg-amber-600 hover:bg-amber-700 px-5 py-3 rounded-full font-semibold transition-all text-center mt-2"
               >
                 Sign Up
               </button>
