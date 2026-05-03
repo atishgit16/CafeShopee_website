@@ -242,78 +242,33 @@ const AboutPage = () => {
           </div>
         </section>
 
-        {/* Our Story Section */}
-      <div className="grid md:grid-cols-3 gap-8">
-  {[
-    {
-      title: "Quality First",
-      desc: "We never compromise on the quality of our beans, roasting process, or the expertise of our baristas.",
-      img: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=2070",
-      color: "#C97B5A"
-    },
-    {
-      title: "Sustainable Sourcing",
-      desc: "We partner directly with farmers who practice ethical and sustainable agriculture, ensuring fair wages and environmental stewardship.",
-      img: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=2070",
-      color: "#6D4C41"
-    },
-    {
-      title: "Community Heart",
-      desc: "BrewHeaven is more than a coffee shop; it's a gathering place where connections are made and stories are shared.",
-      img: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2070",
-      color: "#4E342E"
-    }
-  ].map((item, idx) => (
-    <div
-      key={idx}
-      className="group bg-gray-900/70 rounded-2xl p-8 backdrop-blur-md hover:scale-105 transition-all duration-500 border border-gray-700/50 hover:border-amber-500/50"
-    >
-      {/* ✅ IMAGE */}
-      <img
-        src={item.img}
-        alt={item.title}
-        className="w-24 h-24 object-cover rounded-full mx-auto mb-4"
-      />
-
-      <h3 className="text-2xl font-bold mb-3 text-amber-300">
-        {item.title}
-      </h3>
-
-      <p className="text-gray-400 leading-relaxed">
-        {item.desc}
-      </p>
-    </div>
-  ))}
-</div>
-
+       
         {/* Meet Our Team Section */}
-        <section ref={teamRef} className="py-24 px-6 bg-gradient-to-t from-gray-900/80 to-black/80 backdrop-blur-sm">
-          <div className="container mx-auto max-w-6xl">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-amber-400">Meet Our Team</h2>
-            <div className="grid md:grid-cols-4 gap-6">
-             {[
-   
-  { name: "Atish Ghanekar", role: "Master Roaster & Founder", img: atishImg },
-  { name: "Shresha Ghadi", role: "Head Barista", img: shreshaImg },
-  { name: "Sophia Williams", role: "Coffee Sommelier", img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=2080" },
-  { name: "Marcus Johnson", role: "Operations Manager", img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=2080" }
-].map((member, idx) => (
-                <div key={idx} className="group text-center transform hover:scale-105 transition-all duration-500">
-                  <div className="relative w-48 h-48 mx-auto rounded-full overflow-hidden mb-4 shadow-xl border-2 border-amber-500/30 group-hover:border-amber-500 transition-colors">
-                    <img 
-                      src={member.img} 
-                      alt={member.name} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold text-white">{member.name}</h3>
-                  <p className="text-amber-400 text-sm">{member.role}</p>
-                </div>
-              ))}
-            </div>
+ <section ref={teamRef} className="py-24 px-6 bg-gradient-to-t from-gray-900/80 to-black/80 backdrop-blur-sm">
+  <div className="container mx-auto max-w-6xl">
+    <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-amber-400">Meet Our Team</h2>
+    
+    <div className="flex flex-wrap justify-center gap-10 md:gap-16">
+      {[
+        { name: "Atish Ghanekar", role: "Master Roaster & Founder", img: atishImg },
+        { name: "Shresha Ghadi", role: "Head Barista", img: shreshaImg },
+      ].map((member, idx) => (
+        <div key={idx} className="group text-center transform hover:scale-105 transition-all duration-500">
+          <div className="relative w-40 h-40 md:w-48 md:h-48 mx-auto rounded-full overflow-hidden mb-4 shadow-xl border-2 border-amber-500/30 group-hover:border-amber-500 transition-colors">
+            <img 
+              src={member.img} 
+              alt={member.name} 
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            />
           </div>
-        </section>
+          <h3 className="text-xl font-bold text-white">{member.name}</h3>
+          <p className="text-amber-400 text-sm">{member.role}</p>
+        </div>
+      ))}
+    </div>
 
+  </div>
+</section>
         {/* Testimonials / Quote Section */}
         <section className="py-20 px-6 bg-black/50 backdrop-blur-sm">
           <div className="container mx-auto max-w-4xl text-center">
