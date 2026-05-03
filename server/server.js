@@ -5,9 +5,12 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
 dotenv.config();
+connectDB();
 
+// ✅ Create app first
+const app = express();
 
-// CORS configuration for Render
+// ✅ Then configure CORS
 const corsOptions = {
   origin: ['https://brewheavencafe.onrender.com', 'http://localhost:5173'],
   credentials: true,
@@ -15,24 +18,10 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-
-// Connect to MongoDB
-connectDB();
-
-const app = express();
-
-
-
-// Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Import models
-require('./models/Contact');
-
-// Routes - Use the routes from the routes folder
+// Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/cart', require('./routes/cartRoutes'));
@@ -42,14 +31,6 @@ app.use('/api/coupons', require('./routes/couponRoutes'));
 app.use('/api/locations', require('./routes/locationRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
-
-// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
