@@ -4,13 +4,25 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
-// Load environment variables
 dotenv.config();
+
+
+// CORS configuration for Render
+const corsOptions = {
+  origin: ['https://brewheavencafe.onrender.com', 'http://localhost:5173'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
 
 // Connect to MongoDB
 connectDB();
 
 const app = express();
+
+
 
 // Middleware
 app.use(cors());

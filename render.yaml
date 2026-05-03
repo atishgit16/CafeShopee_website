@@ -1,0 +1,16 @@
+# render.yaml
+services:
+  - type: web
+    name: brewheaven-backend
+    env: node
+    buildCommand: cd server && npm install
+    startCommand: cd server && node server.js
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+
+        
