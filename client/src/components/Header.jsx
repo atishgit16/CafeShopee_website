@@ -145,7 +145,7 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
         </div>
       </nav>
 
-      {/* Mobile Menu - Show ALL navigation items */}
+      {/* Mobile Menu - Responsive 3 lines max - With WHITE TEXT */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ 
@@ -157,22 +157,38 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
         className={`fixed top-16 left-0 right-0 z-40 bg-black/95 backdrop-blur-lg p-4 md:hidden max-h-[80vh] overflow-y-auto`}
       >
         <div className="flex flex-col space-y-2">
-          {/* Show ALL navigation items without slicing */}
-          {navItems.map((item) => (
+          {/* First 3 items - WITH text-white */}
+          {navItems.slice(0, 3).map((item) => (
             <button
               key={item.name}
               onClick={() => handleNavigation(item)}
-              className="text-lg font-medium hover:text-amber-400 transition-colors py-2 border-b border-white/10 text-left"
+              className="text-lg font-medium text-white hover:text-amber-400 transition-colors py-2 border-b border-white/10 text-left"
             >
               {item.name}
             </button>
           ))}
           
+          {/* Remaining items - WITH text-white */}
+          {navItems.length > 3 && (
+            <div className="mt-2 border-t border-white/10 pt-2">
+              {navItems.slice(3).map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => handleNavigation(item)}
+                  className="text-lg font-medium text-white hover:text-amber-400 transition-colors py-2 border-b border-white/10 text-left w-full"
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+          )}
+          
+          {/* Auth section - WITH text-white */}
           {isAuthenticated ? (
             <>
               <button 
                 onClick={handleLogout}
-                className="text-lg font-medium hover:text-red-400 transition-colors py-2 border-b border-white/10 text-left"
+                className="text-lg font-medium text-white hover:text-red-400 transition-colors py-2 border-b border-white/10 text-left"
               >
                 Logout
               </button>
@@ -184,7 +200,7 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
                   navigate('/login');
                   setMobileMenuOpen(false);
                 }}
-                className="text-lg font-medium hover:text-amber-400 transition-colors py-2 border-b border-white/10 text-left"
+                className="text-lg font-medium text-white hover:text-amber-400 transition-colors py-2 border-b border-white/10 text-left"
               >
                 Login
               </button>
@@ -193,7 +209,7 @@ const Header = ({ scrolled = false, scrollToSection, heroRef, aboutRef, menuRef,
                   navigate('/register');
                   setMobileMenuOpen(false);
                 }}
-                className="bg-amber-600 hover:bg-amber-700 px-5 py-3 rounded-full font-semibold transition-all text-center mt-2"
+                className="bg-amber-600 hover:bg-amber-700 text-white px-5 py-3 rounded-full font-semibold transition-all text-center mt-2"
               >
                 Sign Up
               </button>
